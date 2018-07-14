@@ -1,0 +1,52 @@
+#!/bin/bash
+
+#Script written by Joseph Allen jallen6@ramapo.edu
+#This is a quick bash script to automate the commands used in the first lecture
+# of hadoop programming for CMPS 364 Big Data SU18
+
+# Anyone in the class is free to use this script, but it is provided 'as is' 
+# Note: that it doesn't do any error checking minus for arg count and it does drop
+# the entire output directory.
+
+
+
+#Ensure correct amount of args are provided
+if [ $# -ne 2 ] 
+then
+	echo 'Usage <java main file> <input file>'
+	echo 'This script compiles all java files in a directory, saved in the file'
+	echo 'hierarchy of the first class by the name of the main file. Then builds'
+	echo ' a jar file, deletes the '~/output' directory, run the script, and'
+	echo ' finally cats the output file'
+	echo 'The input file is relative to the input folder'
+	exit 1
+fi
+
+#Defines for the class path and bin in case they are not provided in the 
+#shell's enviroment. If they differ from default they will need to be updated
+HADOOP_CLASSPATH=$(/usr/local/hadoop/bin/hadoop classpath)
+HADOOP_BIN=/usr/local/hadoop/bin/hadoop
+
+
+echo 'Compiling java and building jar:'
+#Compile all java files in the current directory and store in a directory that
+#matches the name of main file. Then build a jar by the samename.jar, and include
+# the entire directory that was compiled
+javac -classpath ${HADOOP_CLASSPATH} -d ${1}/ *.java | jar -cvf ${1}.jar -C ${1}/ .
+
+#Remove the old directory to prevent a crash as program does not error check
+echo 'Deleting old output directoy'
+rm -rf ~/output
+
+#Run the compiled jar as a hadoop file
+echo 'Running jar:'
+${HADOOP_BIN} jar ${1}.jar org.apache.hadoop.ramapo.${1} ~/Input/${2} ~/output
+
+#Output the results to console
+echo -e "\n\n ======RESULTS======="
+cat ~/output/part-r-00000 
+echo '====End of Results======'
+
+exit 0
+
+
